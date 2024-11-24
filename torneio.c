@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <ctype.h>
 
+/* Dupla: Pedro Henrique e Nathan */
+
 int pedirDados();
 void imprimirResultados(int vitorias);
 
