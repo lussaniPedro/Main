@@ -28,7 +28,7 @@ def menu():
                 os.system("pause")
 
 def cadastrarLivro():
-    
+
     global titulo
     global autor
     global data
