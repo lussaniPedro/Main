@@ -1,4 +1,5 @@
 #include <stdio.h>
+
 void ler_data();
 void imprimir_data(int dia, int mes, int ano);
 int validar_data(int dia, int mes, int ano);

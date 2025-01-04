@@ -1,8 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-#define N 100
-
-int validar_data(int dia, int mes, int ano);
+#include <string.h>
+#include <ctype.h>
 
 // struct Data
 typedef struct{
@@ -13,34 +12,43 @@ typedef struct{
 
 // struct Livro
 typedef struct{
-    char titulo[N];
-    char autor[N];
-    char genero[N];
+    char *titulo;
+    char *autor;
+    char *genero;
     TData publicacao;
 } TLivro;
 
 /* Declaração de funções */
 void menu();
-void listar_livros();
-void excluir_livro();
-void alterar_livro();
-void option(int opcao);
-void cadastrar_livro(TLivro *cadastro_livro);
+void op_menu(int opcao);
+void listarLivros();
+void exibeLivro(int i);
+void excluirLivro();
+void alteracao();
+void alterarLivro(int op, int indice);
+void incluirLivro();
+TLivro cadastrarLivro();
+void limparPonteiros();
+int validar_data(int dia, int mes, int ano);
+void validarAlocacao(void *ptr);
 
-TLivro _cadastro_livro[N];
+TLivro *_livros;
 int _numLivros = 0;
 
 int main(){
     int op;
+
     do{
         menu();
 
-        printf("Escolha uma opcao: ");
         scanf("%d", &op);
         fflush(stdin);
 
-        option(op);
+        system("cls");
+        op_menu(op);
     } while(op != 0);
+
+    limparPonteiros();
     return 0;
 }
 
@@ -55,90 +63,120 @@ void menu(){
     printf("|                    |\n");
     printf("| 4. Excluir livro   |\n");
     printf("| 0. Sair            |\n\n");
+
+    printf("Escolha uma opcao: ");
 }
 
-void option(int opcao){
+void op_menu(int opcao){
     switch(opcao){
         case 1:
-            system("cls");
-            cadastrar_livro(&_cadastro_livro[_numLivros]);
-            _numLivros++;
+            incluirLivro();
             break;
         case 2:
-            system("cls");
-            listar_livros();
+            listarLivros();
             system("pause");
             break;
         case 3:
-            system("cls");
-            alterar_livro();
+            alteracao();
             break;
         case 4:
-            system("cls");
-            excluir_livro();
+            excluirLivro();
             break;
         case 0:
-            system("cls");
             printf("Saindo...\n");
             break;
         default:
             printf("Opcao invalida! Tente novamente.\n");
+            system("pause");
     }
 }
 
+void incluirLivro(){
+    if(_numLivros == 0){
+        _livros = (TLivro*)malloc(1 * sizeof(TLivro));
+    } else{
+        _livros = (TLivro*)realloc(_livros, (_numLivros + 1) * sizeof(TLivro));
+    }
+    validarAlocacao(_livros);
+    _livros[_numLivros++] = cadastrarLivro();
+
+    system("Cls");
+    printf("Livro cadastrado com sucesso!\n");
+    system("pause");
+}
+
 // Cadastra um livro
-void cadastrar_livro(TLivro *cadastro_livro){
-    
+TLivro cadastrarLivro(){
+    char strAux[100];
+    TLivro livro;
+
     printf("Digite o titulo do livro: ");
-    fgets(cadastro_livro->titulo, N, stdin);
+    gets(strAux);
+    livro.titulo = (char*)malloc((strlen(strAux) + 1) * sizeof(char));
+    validarAlocacao(livro.titulo);
+    strcpy(livro.titulo, strAux);
 
     printf("Digite o genero do livro: ");
-    fgets(cadastro_livro->genero, N, stdin);
+    gets(strAux);
+    livro.genero = (char*)malloc((strlen(strAux) + 1) * sizeof(char));
+    validarAlocacao(livro.genero);
+    strcpy(livro.genero, strAux);
 
     printf("Digite o autor do livro: ");
-    fgets(cadastro_livro->autor, N, stdin);
+    gets(strAux);
+    livro.autor = (char*)malloc((strlen(strAux) + 1) * sizeof(char));
+    validarAlocacao(livro.autor);
+    strcpy(livro.autor, strAux);
 
     int data;
     do{
         printf("Digite o dia, mes e ano em que o livro foi publicado: ");
-        scanf("%d%d%d", &cadastro_livro->publicacao.dia, &cadastro_livro->publicacao.mes, &cadastro_livro->publicacao.ano);
+        scanf("%d%d%d", &livro.publicacao.dia, &livro.publicacao.mes, &livro.publicacao.ano);
 
-        data = validar_data(cadastro_livro->publicacao.dia, cadastro_livro->publicacao.mes, cadastro_livro->publicacao.ano);
+        data = validar_data(livro.publicacao.dia, livro.publicacao.mes, livro.publicacao.ano);
         if (data == 0) {
             printf("Data invalida, digite novamente!\n\n");
         }
     } while (data == 0);
     
     printf("Livro cadastrado com sucesso!\n");
+
+    return livro;
 }
 
 // Lista os livros
-void listar_livros(){
+void listarLivros(){
     if(_numLivros == 0){
         printf("A lista de livros esta vazia.\n");
+        system("pause");
         return;
     }
 
     printf("Lista de Livros (%d):\n\n", _numLivros);
     for(int i = 0; i < _numLivros; i++){
-        printf("| Livro (%d):\n", i + 1);
-        printf("| Titulo do livro: %s", _cadastro_livro[i].titulo);
-        printf("| Genero do livro: %s", _cadastro_livro[i].genero);
-        printf("| Autor do livro: %s", _cadastro_livro[i].autor);
-        printf("| Data de publicacao %d/%d/%d\n\n", _cadastro_livro[i].publicacao.dia, _cadastro_livro[i].publicacao.mes, _cadastro_livro[i].publicacao.ano);
+        exibeLivro(i);
     }
 }
 
+void exibeLivro(int i){
+    printf("| Livro (%d):\n", i + 1);
+    printf("| Titulo: %s\n", _livros[i].titulo);
+    printf("| Genero: %s\n", _livros[i].genero);
+    printf("| Autor: %s\n", _livros[i].autor);
+    printf("| Data de publicacao %02d/%02d/%d\n\n", _livros[i].publicacao.dia, _livros[i].publicacao.mes, _livros[i].publicacao.ano);
+}
+
 // Altera um livro
-void alterar_livro(){
-    listar_livros();
+void alteracao(){
+    int indice, op;
 
     if(_numLivros == 0){
+        printf("A lista de livros esta vazia.\n");
         system("pause");
         return;
-    } 
+    }
 
-    int indice, option, data;
+    listarLivros();
     printf("Digite o numero do livro a ser alterado [%d-%d]: ", 1, _numLivros);
     scanf("%d", &indice);
     fflush(stdin); 
@@ -151,11 +189,7 @@ void alterar_livro(){
     }
 
     indice--;
-    printf("| Livro (%d):\n", indice);
-    printf("| Titulo do livro: %s", _cadastro_livro[indice].titulo);
-    printf("| Genero do livro: %s", _cadastro_livro[indice].genero);
-    printf("| Autor do livro: %s", _cadastro_livro[indice].autor);
-    printf("| Data de publicacao %d/%d/%d\n\n", _cadastro_livro[indice].publicacao.dia, _cadastro_livro[indice].publicacao.mes, _cadastro_livro[indice].publicacao.ano);
+    exibeLivro(indice);
 
     printf("Digite:\n");
     printf("| 1. Para titulo\n");
@@ -163,48 +197,59 @@ void alterar_livro(){
     printf("| 3. Para autor\n");
     printf("| 4. Para data\n\n");
     printf("Qual informacao deseja alterar? ");
-    scanf("%d", &option);
-    fflush(stdin); 
+    scanf("%d", &op);
+    fflush(stdin);
+
+    alterarLivro(op, indice);
 
     system("cls");
-    switch(option){
+    printf("Livro alterado com sucesso!\n");
+    system("pause");
+}
+
+void alterarLivro(int op, int indice){
+    char strAux[100];
+
+    system("cls");
+    switch(op){
     case 1:
         printf("Digite o titulo do livro: ");
-        fgets(_cadastro_livro[indice].titulo, N, stdin);
+        gets(strAux);
+        _livros[indice].titulo = (char *)malloc((strlen(strAux) + 1) * sizeof(char));
+        validarAlocacao(_livros[indice].titulo);
+        strcpy(_livros[indice].titulo, strAux);
         break;
     case 2:
         printf("Digite o genero do livro: ");
-        fgets(_cadastro_livro[indice].genero, N, stdin);
+        gets(strAux);
+        _livros[indice].genero = (char *)malloc((strlen(strAux) + 1) * sizeof(char));
+        validarAlocacao(_livros[indice].genero);
+        strcpy(_livros[indice].genero, strAux);
         break;
     case 3:
         printf("Digite o autor do livro: ");
-        fgets(_cadastro_livro[indice].autor, N, stdin);
+        gets(strAux);
+        _livros[indice].autor = (char *)malloc((strlen(strAux) + 1) * sizeof(char));
+        validarAlocacao(_livros[indice].autor);
+        strcpy(_livros[indice].autor, strAux);
         break;
     case 4:
         do{
             printf("Digite o dia, mes e ano em que o livro foi publicado: ");
-            scanf("%d%d%d", &_cadastro_livro[indice].publicacao.dia, &_cadastro_livro[indice].publicacao.mes, &_cadastro_livro[indice].publicacao.ano);
-
-            data = validar_data(_cadastro_livro[indice].publicacao.dia, _cadastro_livro[indice].publicacao.mes, _cadastro_livro[indice].publicacao.ano);
-            if(data == 0){
-                printf("Data invalida, digite novamente!\n\n");
-            }
-        } while(data == 0);
+            scanf("%d%d%d", &_livros[indice].publicacao.dia, &_livros[indice].publicacao.mes, &_livros[indice].publicacao.ano);
+        } while(validar_data(_livros[indice].publicacao.dia, _livros[indice].publicacao.mes, _livros[indice].publicacao.ano) == 0);
         break;
     default:
-        printf("Opcao invalida!\n");
         system("cls");
+        printf("Opcao invalida!\n");
+        system("pause");
         return;
     }
-    system("cls");
-
-    printf("\nLivro alterado com sucesso!\n");
-    system("pause");
 }
 
 // Exclui um livro
-void excluir_livro(){
-    listar_livros();
+void excluirLivro(){
+    listarLivros();
 
     if(_numLivros == 0){
         return;
@@ -222,11 +267,12 @@ void excluir_livro(){
     }
 
     for(int i = indice - 1; i < _numLivros - 1; i++){
-        _cadastro_livro[i] = _cadastro_livro[i + 1]; 
+        _livros[i] = _livros[i + 1]; 
     }
     _numLivros--;
 
-    printf("\nLivro excluido com sucesso!\n");
+    system("cls");
+    printf("Livro excluido com sucesso!\n");
     system("pause");
 }
 
@@ -258,5 +304,25 @@ int validar_data(int dia, int mes, int ano){
         x = 0;
     }
 
+    if(x == 0){
+        printf("Data invalida!!! Digite novamente!\n\n");
+    }
+
     return x;
+}
+
+void limparPonteiros(){
+    for(int i = 0; i < _numLivros; i++){
+        free(_livros[i].titulo);
+        free(_livros[i].autor);
+        free(_livros[i].genero);
+    }
+    free(_livros);
+}
+
+void validarAlocacao(void *ptr){
+    if(ptr == NULL){
+        printf("ERRO AO ALOCAR MEMORIA!\n");
+        exit(1);
+    }
 }

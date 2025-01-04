@@ -1,4 +1,0 @@
-ddd;ffff;5;12;bbbb@tttt#yyyy#
-aaa;rrrr;2;34;hhhh@jjjj#
-llll;kkkkkk;4;28;iiii@pppppp#eeeeee#
-wwwwww;ggggg;3;27;tttt@jjjjj@ffff@kkkk#lllll#rrrr#
