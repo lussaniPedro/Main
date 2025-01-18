@@ -5,11 +5,17 @@
 #include <Windows.h>
 #include <stdbool.h>
 #include <ctype.h>
-#define CLS printf("\033[2J\033[1;1H");
+#include <conio.h>
+#define F fflush(stdin);
+#define CLS (_WIN32 ? system("cls") : system("clear"));
+#define SPAUSE                                              \
+    printf("Pressione qualquer tecla para continuar. . ."); \
+    getch();
 #define GTS        \
     fflush(stdin); \
     gets(str);     \
     fflush(stdin);
+#pragma GCC optimize("O3")
 
 typedef struct
 {
@@ -65,7 +71,7 @@ typedef struct
     tData data;
     tHoraio horario;
     tAmigo **amigos;
-    tCategoria **categoria;
+    tCategoria *categoria;
     tLocal *local;
     int Namigos;
     char *descricao;
@@ -81,13 +87,13 @@ tCategoria *Listacategoria = NULL;
 int Numencontro = 0, Numamigo = 0, Numcategoria = 0, Numlocal = 0;
 
 //                            // inicio meio e fim
-void start();                 // "fractal trunk"
-void menuprincipal();         // explode o menu principal
-void orienta();               // puxa uma verificacao pos menu principal
-void switchprincipal(int op); // invoca as funoces manter ou relatorios com um SC.
-void limpamemoria();          // limpa memoria alocada
-void end();                   // finalização do programa
+void title();                  // digita o titulo
+void menuprincipal();          // explode o menu principal
+void switchprincipal(char op); // invoca as funoces manter ou relatorios com um SC.
+void limpamemoria();           // limpa memoria alocada
+void end();                    // titulo de saida e fim
 //
+void mainamigo();                          // invoca a main amigo
 void menuamigo();                          // invoca as opcoes de acao para com um amigo
 void switchamigo(char op);                 // switchcase do menu amigo
 void criaamigo();                          // cria amigos
@@ -101,6 +107,7 @@ bool validaemail(char *email);             // validates emails and checks for do
 bool validanumero(char *num);              // checks for doubles
 int buscaxnome(int op);                    // buscapelonome
 //
+void maincat();                // invoca a main categoria
 void menucategoria();          // invoca o menu categoria
 void switchcategoria(char op); // invoca as opcoes de acao para com uma categoria
 void criacategoria();          // cria categorias
@@ -109,11 +116,15 @@ void alteracategoria(int cat); // edita categorias
 void orientaexcluicat();       // orienta a exclusao de categorias
 void excluicat(int opCat);     // exclui categorias
 //
-void menuencontro();          // invoca o menu encontro
-void switchencontro(char op); // invoca as opcoes de acao para com um encontro
-void criaencontro();          // cria encontros
-bool validanomenc(char *str);
+void mainencontro();                     // invoca a main encontro
+void menuencontro();                     // invoca o menu encontro
+void switchencontro(char op);            // invoca as opcoes de acao para com um encontro
+void incluiencontro();                   // inclui encontros
+tEncontro criaencontro();                // cria encontros
+tAmigo showchavfr(tAmigo *vet[], int t); // exibe os amigos disponiveis para a incusao
+bool validanomenc(char *str);            // checks for doubles
 //
+void mainlocal();                        // invoca a main local
 void menulocal();                        // invoca o menu local
 void switchlocal(char op);               // invoca as opcoes de acao para com um local
 void crialocal();                        // cria locais
@@ -134,16 +145,28 @@ char valida16();                                   // valida operador do menu pr
 char valida14();                                   // valida operadoeres 1 a 4
 bool validanascimento(int dias, int mes, int ano); // valida datas de nascimento
 bool validadataenc(int dias, int mes, int ano);    // valida datas para encontros
+bool validarhorario(int hora, int min);            // valida horarios
 bool validasimnao();                               // valida sim e nao
 char valida15();                                   // valida 1 a 5
 char valida13();                                   // valida 1 a 3
 char valida12();                                   // valida 1 a 2
 void ERRO(int opErro);                             // mensagem de erro
-void adviser(int opex);                            // Pergunta se o usuario quer prossegiuir com a ma ideia
+bool adviser();                                    // Pergunta se o usuario quer prossegiuir com a ma ideia
 
 int main()
 {
-    start();
+    char op;
+    title();
+    do
+    {
+        menuprincipal();
+        op = valida16();
+        switchprincipal(op);
+
+    } while (op != '6');
+
+    limpamemoria();
+    end();
 }
 
 bool validanomenc(char *str)
@@ -171,9 +194,25 @@ void switchencontro(char op)
     case '3':
         // excluiencontro();
         break;
-    default:
-        break;
     }
+    return;
+}
+
+void mainencontro()
+{
+    char op;
+    do
+    {
+        menuencontro();
+        op = valida14();
+        if (op == '4')
+        {
+            break;
+        }
+        switchencontro(op);
+
+    } while (op != '4');
+    return;
 }
 
 void menuencontro()
@@ -186,22 +225,96 @@ void menuencontro()
     printf("3. para excluir um encontro\n");
     printf("4. para voltar\n");
     printf("\nO que deseja fazer?: ");
-    char op = valida14();
-    switchencontro(op);
 }
 
-void criaencontro()
+void incluiencontro()
+{
+    if (Numencontro == 0)
+    {
+        Listaencontro = (tEncontro *)malloc(1 * sizeof(tEncontro));
+    }
+    else
+    {
+        Listaencontro = (tEncontro *)realloc(Listaencontro, (Numencontro + 1) * sizeof(tEncontro));
+    }
+
+    verifica_alocacao(Listaencontro);
+    Listaencontro[Numencontro] = criaencontro();
+    Numencontro++;
+
+    CLS
+        printf("Encontro criado com sucesso!\n");
+    Sleep(3000);
+    return;
+}
+
+tAmigo showchavfr(tAmigo *vet[], int t) {
+    tAmigo *amigos = NULL;
+    bool av;
+    int num = 0;
+
+    for (int i = 0; i < Numamigo; i++) {
+        av = true;
+        for (int j = 0; j < t; j++) {
+            if (strcmp(Listaamigo[i].nome, vet[j]->nome) == 0) {
+                av = false;
+                break;
+            }
+        }
+        if (av) {
+            if (num == 0) {
+                amigos = (tAmigo *)malloc(sizeof(tAmigo));
+                printf("Amigos disponiveis:\n\n\n");
+            } else {
+                amigos = (tAmigo *)realloc(amigos, (num + 1) * sizeof(tAmigo));
+            }
+            verifica_alocacao(amigos);
+            amigos[num] = Listaamigo[i];
+            printf("%d Amigo: %s, (%s)\n", num + 1, amigos[num].nome, amigos[num].apelido);
+            printf("---------------------\n");
+            num++;
+        }
+    }
+
+    int op = 0;
+    printf("\n\nQual amigo deseja adicionar?: ");
+    while (op < 1 || op > num) {
+        scanf("%d", &op);
+        if (op < 1 || op > num) {
+            ERRO(1);
+        }
+    }
+
+    tAmigo escolhido = amigos[op - 1];
+    free(amigos);
+    return escolhido;
+}
+
+tEncontro criaencontro()
 {
     char str[100];
+    tEncontro encontro;
     CLS
 
         printf("**CRIACAO DE ENCONTROS***\n\n");
     printf("Voce tem %d encontros no momento\n\n", Numencontro);
     printf("Qual sera o nome de seu encontro?: ");
 
-    GTS
+    do
+    {
+        GTS if (validanomenc(str))
+        {
+            encontro.nome = (char *)malloc((strlen(str) + 1) * sizeof(char));
+            strcpy(encontro.nome, str);
+            break;
+        }
+        else
+        {
+            printf("Ja existe um encontro com esse nome!\n");
+        }
 
-
+    } while (!validanomenc(str));
+    /////////////////////////////////////////////////////////////////
     CLS
         printf("Seu encontro precisa de um local.\n\n");
     if (Numlocal == 0)
@@ -210,68 +323,169 @@ void criaencontro()
         printf("Voce esta sendo direcionado tempoarariamente para a criacao de um local.\n");
         Sleep(3000);
         crialocal();
-        Listaencontro[Numencontro].local = &Listalocal[Numlocal];
-        puts(Listaencontro[Numencontro].local->nomelocal);
         CLS
-            printf("O local criado foi adicionado com sucesso!\n");
+            encontro
+                .local = &Listalocal[Numlocal - 1];
+        printf("O local criado foi adicionado com sucesso!\n");
     }
     else
     {
         printf("Digite 1 para adicionar um local existente.\nDigite 2 para adicionar um novo local.\n");
+        printf("Opcao: ");
         char op = valida12();
-        if (op == 1)
+        if (op == '1')
         {
-            int opl;
+            int opl = 0;
             exibelocal(true, false);
-            printf("Digite um operador de 1 a %d para escolher o local parq seu encontro", Numlocal);
-            do
+            (Numlocal == 1) ? (printf("\n\nDigite 1 para escolher o local disponivel: ")) : (printf("\n\nDigite um numero de 1 a %d para escolher: ", Numlocal));
+            while (opl < 1 || opl > Numlocal)
             {
+                fflush(stdin);
                 scanf(" %d", &opl);
                 if (opl < 1 || opl > Numlocal)
                 {
                     ERRO(1);
                 }
-            } while (op < 1 || op > Numlocal);
-            Listaencontro[Numencontro].local = &Listalocal[op - 1];
+            }
+            encontro.local = &Listalocal[opl - 1];
+
+            Sleep(4000);
         }
         else
         {
             crialocal();
-            Listaencontro[Numencontro].local = &Listalocal[Numlocal];
+            encontro.local = &Listalocal[Numlocal - 1];
             CLS
                 printf("O local criado foi adicionado com sucesso!\n");
         }
     }
+    /////////////////////////////////////////////////////////////////////
+    encontro.amigos = (tAmigo **)malloc(1 * sizeof(tAmigo *));
+    printf("Seu encontro precisa de pelo menos um amigo.\n");
+    if (Numamigo == 0)
+    {
+        printf("Voce esta sendo direcionado tempoarariamente para a criacao de um amigo.\n");
+        Sleep(3000);
+        criaamigo();
+        encontro.amigos[0] = &Listaamigo[Numamigo - 1];
+        encontro.Namigos = 1;
+        printf("O amigo criado foi adicionado com sucesso!\n");
+
+        bool op;
+        do
+        {
+            CLS
+                printf("Seu encontro tem [1] amigo.\n");
+            printf("Deseja criar um novo amigo para o seu encontro?(S/N): ");
+            op = validasimnao();
+            if (op)
+            {
+                criaamigo();
+                encontro.amigos = (tAmigo **)realloc(encontro.amigos, (encontro.Namigos + 1) * sizeof(tAmigo *));
+                verifica_alocacao(encontro.amigos);
+                encontro.amigos[Numamigo - 1] = &Listaamigo[Numamigo - 1];
+                encontro.Namigos++;
+                CLS
+                    printf("O amigo criado foi adicionado com sucesso!\n");
+                Sleep(2000);
+            }
+            else
+            {
+                break;
+            }
+
+        } while (op);
+    }
+    else
+    {
+        printf("Digite 1 para adicionar um amigo existente.\nDigite 2 para adicionar um novo amigo.\n");
+        printf("Opcao: ");
+        char op = valida12();
+        if (op == '1')
+        {
+            int opl = 0;
+            exibeamigo(true, false);
+            (Numamigo == 1) ? (printf("\n\nDigite 1 para escolher o amigo disponivel: ")) : (printf("\n\nDigite um numero de 1 a %d para escolher: ", Numamigo));
+            while (opl < 1 || opl > Numamigo)
+            {
+                fflush(stdin);
+                scanf(" %d", &opl);
+                if (opl < 1 || opl > Numamigo)
+                {
+                    ERRO(1);
+                }
+            }
+            encontro.amigos[0] = &Listaamigo[opl - 1];
+            encontro.Namigos = 1;
+            Sleep(4000);
+        }
+        else
+        {
+            printf("Voce esta sendo direcionado tempoarariamente para a criacao de um amigo.\n");
+            Sleep(3000);
+            criaamigo();
+            encontro.amigos[0] = &Listaamigo[Numamigo - 1];
+            encontro.Namigos = 1;
+            printf("O amigo criado foi adicionado com sucesso!\n");
+            Sleep(1000);
+        }
+    }
+
+    bool op;
+    do // adicao de novos amigos
+    {
+        CLS
+            printf("Deseja adicionar mais amigos?(S/N): ");
+        op = validasimnao();
+        if (op)
+        {
+            if (encontro.Namigos == Numamigo)
+            {
+                printf("Voce esta sendo direcionado tempoarariamente para a criacao de um novo amigo.\n");
+                Sleep(3000);
+                criaamigo();
+                encontro.amigos = (tAmigo **)realloc(encontro.amigos, (encontro.Namigos + 1) * sizeof(tAmigo *));
+                verifica_alocacao(encontro.amigos);
+                encontro.amigos[Numamigo - 1] = &Listaamigo[Numamigo - 1];
+                encontro.Namigos++;
+                CLS
+                    printf("O amigo criado foi adicionado com sucesso!\n");
+                Sleep(2000);
+                continue;
+            }
+            else
+            {
+                encontro.amigos = (tAmigo **)realloc(encontro.amigos, (encontro.Namigos + 1) * sizeof(tAmigo *));
+                verifica_alocacao(encontro.amigos);
+                CLS
+                tAmigo aux = showchavfr(encontro.amigos, encontro.Namigos);
+                encontro.amigos[encontro.Namigos] = &aux;
+                puts(encontro.amigos[encontro.Namigos]->nome);
+                Sleep(3000);
+                encontro.Namigos++;
+            }
+        }
+        else{
+            break;
+        }
+
+    } while (op);
+
+    printf("Funcao finalizada");
+    Sleep(3000);
+    return encontro;
 }
 
-void adviser(int opex)
+bool adviser()
 {
     CLS
         ERRO(0);
     bool maideia = validasimnao();
     if (maideia)
     {
-        if (opex == 1)
-        {
-            orientaexcluiamigo();
-        }
-        else if (opex == 2)
-        {
-            orientaexcluilocal();
-        }
-        else if (opex == 3)
-        {
-            orientaexcluicat();
-        }
-        else
-        {
-            // orientaexcluiencontro();
-        }
+        return true;
     }
-    else
-    {
-        menuprincipal();
-    }
+    return false;
 }
 
 void excluilocal(int opLocal)
@@ -447,7 +661,8 @@ char valida14()
     char opIn;
     do
     {
-        scanf(" %c", &opIn);
+        F
+            scanf(" %c", &opIn);
         if (opIn != '1' && opIn != '2' && opIn != '3' && opIn != '4')
         {
             ERRO(1);
@@ -497,17 +712,9 @@ void exibelocal(bool prolongar, bool rel)
 
     if (rel)
     {
-        Sleep(1000);
-        printf("Pressione ENTER para voltar: ");
-        while (getchar() != '\n')
-            ;
-        getchar();
-        menurelatorios();
+        SPAUSE
     }
-    else
-    {
-        return;
-    }
+    return;
 }
 
 void orientaeditalocal()
@@ -560,7 +767,15 @@ void crialocal()
     CLS
         printf("Voce tem %d locais no momento\n\n", Numlocal);
 
-    (Numlocal == 0) ? (Listalocal = (tLocal *)malloc(1 * sizeof(tLocal))) : (Listalocal = (tLocal *)realloc(Listalocal, (Numlocal + 1) * sizeof(tLocal)));
+    if (Numlocal == 0)
+    {
+        Listalocal = (tLocal *)malloc(1 * sizeof(tLocal));
+    }
+    else
+    {
+        Listalocal = (tLocal *)realloc(Listalocal, (Numlocal + 1) * sizeof(tLocal));
+    }
+
     verifica_alocacao(Listalocal);
 
     printf("Em qual estado sera seu encontro?: ");
@@ -614,6 +829,7 @@ void crialocal()
 
 void switchlocal(char op)
 {
+
     switch (op)
     {
     case '1':
@@ -636,17 +852,35 @@ void switchlocal(char op)
         }
         else if (Numlocal < 2)
         {
-            adviser(2);
+            if (adviser())
+            {
+                orientaexcluilocal();
+            }
         }
         else
         {
             orientaexcluilocal();
         }
-
-        break;
-    default:
         break;
     }
+    return;
+}
+
+void mainlocal()
+{
+    char op;
+    do
+    {
+        menulocal();
+        op = valida14();
+        if (op == '4')
+        {
+            break;
+        }
+        switchlocal(op);
+
+    } while (op != '4');
+    return;
 }
 
 void menulocal()
@@ -659,8 +893,7 @@ void menulocal()
     printf("3. para excluir um local\n");
     printf("4. para voltar\n");
     printf("\nO que deseja fazer?: ");
-    char op = valida14();
-    switchlocal(op);
+    return;
 }
 
 void excluicat(int opCat)
@@ -749,17 +982,9 @@ void exibecategoria(bool rel)
 
     if (rel)
     {
-        Sleep(1000);
-        printf("Pressione ENTER para voltar: ");
-        while (getchar() != '\n')
-            ;
-        getchar();
-        menurelatorios();
+        SPAUSE
     }
-    else
-    {
-        return;
-    }
+    return;
 }
 void editacategoria()
 {
@@ -842,7 +1067,23 @@ void criacategoria()
     Numcategoria++;
     printf("Categoria adicionada com sucesso!\n");
     Sleep(2000);
-    menucategoria();
+    return;
+}
+
+void maincat()
+{
+    char op;
+    while (op != '4')
+    {
+        menucategoria();
+        op = valida14();
+        if (op == '4')
+        {
+            break;
+        }
+        switchcategoria(op);
+    }
+    return;
 }
 
 void menucategoria()
@@ -855,8 +1096,6 @@ void menucategoria()
     printf("3. para excluir uma categoria\n");
     printf("4. para voltar\n");
     printf("\nO que deseja fazer?: ");
-    char op = valida14();
-    switchcategoria(op);
     return;
 }
 
@@ -889,21 +1128,21 @@ void switchcategoria(char op)
         }
         else if (Numcategoria < 2)
         {
-            adviser(3);
+            if (adviser())
+            {
+                orientaexcluicat();
+            }
         }
         else
         {
             orientaexcluicat();
             break;
         }
-
-    case '4':
-        menuprincipal();
     }
     return;
 }
 
-void start()
+void title()
 {
 
     char word[] = "Hello, world!";
@@ -914,7 +1153,6 @@ void start()
         Sleep(100);
     }
     Sleep(900);
-    menuprincipal();
 }
 
 void switchrelatorios(char op)
@@ -991,37 +1229,32 @@ void exibeamigo(bool prolongar, bool rel)
         printf("AMIGOS:\n\n");
         for (int i = 0; i < Numamigo; i++)
         {
-            printf("%d amigo: %s\n", i + 1, Listaamigo[i].nome);
+            printf("%d Amigo: %s, (%s)\n", i + 1, Listaamigo[i].nome, Listaamigo[i].apelido);
+            printf("---------------------\n");
         }
     }
 
     else if (prolongar)
     {
-        printf("AMIGOS:\n\n");
+        printf("AMIGOS [%d]:\n\n", Numamigo);
         for (int i = 0; i < Numamigo; i++)
         {
-            printf("Amigo %d: \n", i + 1);
+            printf("---------------------\n");
+            printf("Amigo [%d]: \n\n", i + 1);
             printf("Nome: %s\n", Listaamigo[i].nome);
             printf("Apelido: %s\n", Listaamigo[i].apelido);
             printf("Email: %s\n", Listaamigo[i].email);
             printf("Telefone: %s\n", Listaamigo[i].telefone);
-            printf("Nascimento: (%d/%d/%d)\n\n", Listaamigo[i].nascimento.dia, Listaamigo[i].nascimento.mes, Listaamigo[i].nascimento.ano);
+            printf("Nascimento: (%d/%d/%d)\n", Listaamigo[i].nascimento.dia, Listaamigo[i].nascimento.mes, Listaamigo[i].nascimento.ano);
+            printf("---------------------\n\n\n");
         }
     }
 
     if (rel)
     {
-        Sleep(1000);
-        printf("Pressione ENTER para voltar: ");
-        while (getchar() != '\n')
-            ;
-        getchar();
-        menurelatorios();
+        SPAUSE
     }
-    else
-    {
-        return;
-    }
+    return;
 }
 
 void editaamigo()
@@ -1306,7 +1539,7 @@ bool validadataenc(int dias, int mes, int ano)
         return false;
     if (ano % 4 == 0 && mes == 2 && dias > 29)
         return false;
-    if (ano == 2025 && mes == 2 && dias < 7)
+    if (ano == 2025 && mes == 2 && dias < 6)
         return false;
 
     return true;
@@ -1331,7 +1564,7 @@ void criaamigo()
     char str[100];
 
     CLS
-        printf("Voce tem %d amigo(s) no momento\n\n", Numamigo);
+        printf("Voce tem [%d] amigo(s) no momento.\n\n", Numamigo);
 
     (Numamigo == 0) ? (Listaamigo = (tAmigo *)malloc(1 * sizeof(tAmigo))) : (Listaamigo = (tAmigo *)realloc(Listaamigo, (Numamigo + 1) * sizeof(tAmigo)));
     verifica_alocacao(Listaamigo);
@@ -1406,8 +1639,8 @@ void criaamigo()
     Numamigo++;
     CLS
         printf("Amigo adicionado com sucesso!\n");
-    Sleep(2000);
-    menuamigo();
+    Sleep(1500);
+    return;
 }
 
 void switchamigo(char op)
@@ -1439,7 +1672,10 @@ void switchamigo(char op)
         }
         else if (Numamigo < 2)
         {
-            adviser(1);
+            if (adviser())
+            {
+                orientaexcluiamigo();
+            }
         }
         else
         {
@@ -1447,9 +1683,25 @@ void switchamigo(char op)
         }
         break;
     case '4':
-        menuprincipal();
         break;
     }
+    return;
+}
+
+void mainamigo()
+{
+    char op;
+    while (op != '4')
+    {
+        menuamigo();
+        op = valida14();
+        if (op == '4')
+        {
+            break;
+        }
+        switchamigo(op);
+    }
+    return;
 }
 
 void menuamigo()
@@ -1462,38 +1714,34 @@ void menuamigo()
     printf("3. para excluir um amigo\n");
     printf("4. para voltar\n");
     printf("\nO que deseja fazer?: ");
-    char op = valida14();
-    switchamigo(op);
 }
 
-void switchprincipal(int op)
+void switchprincipal(char op)
 {
 
     switch (op)
     {
-    case '6':
-        limpamemoria();
-
     case '5':
         menurelatorios();
         break;
 
     case '1':
-        menuamigo();
+        mainamigo();
         break;
 
     case '2':
-        menulocal();
+        mainlocal();
         break;
 
     case '3':
-        menucategoria();
+        maincat();
         break;
 
     case '4':
-        menuencontro();
+        mainencontro();
         break;
     }
+    return;
 }
 
 void menuprincipal()
@@ -1508,13 +1756,6 @@ void menuprincipal()
     printf("5. para Relatorios\n");
     printf("6. para Sair\n");
     printf("\nO que deseja fazer?: ");
-    orienta();
-}
-
-void orienta()
-{
-    char op = valida16();
-    switchprincipal(op);
 }
 
 bool validanome(char *nome)
@@ -1637,6 +1878,20 @@ int buscaxnome(int op)
     }
 }
 
+bool validarhorario(int hora, int min)
+{
+
+    if (hora < 0 || hora > 23)
+    {
+        return false;
+    }
+    if (min < 0 || min > 59)
+    {
+        return false;
+    }
+    return true;
+}
+
 void ERRO(int opErro)
 {
 
@@ -1646,7 +1901,7 @@ void ERRO(int opErro)
         printf("Data invalida! Digite novamente: ");
         break;
     case 0:
-        printf("Realocar um vetor dinâmico para 0 posições não é uma boa ideia.\nTem certeza de que deseja prosseguir?(S/N): ");
+        printf("Realocar um vetor dinamico para 0 posicoes nao e uma boa ideia.\nTem certeza de que deseja prosseguir?(S/N): ");
         break;
     case 1:
         printf("Operador invalido! Digite novamente: ");

@@ -218,7 +218,7 @@ void exibirTime(int index){
     } else if(index == 18){
         WHITE printf("%-4d ", index + 1);
         RED printf("| ");
-        WHITE printf("%-16s | %-6d | %-4d | %-6d | %-7d\n", times[index].nome, times[index].pontos, times[index].gols, times[index].vitorias, times[index].cartoes);
+        WHITE printf("%-15s | %-6d | %-4d | %-6d | %-7d\n", times[index].nome, times[index].pontos, times[index].gols, times[index].vitorias, times[index].cartoes);
     } else{
         WHITE printf("%-4d ", index + 1);
         WHITE printf("| ");
@@ -228,7 +228,7 @@ void exibirTime(int index){
 }
 
 void mostrarQualificacao(){
-    printf("\nQualificacao/Rebaixamento\n\n");
+    printf("Qualificacao/Rebaixamento\n\n");
     printf("🟦  Fase de grupos da Copa Libertadores\n");
     printf("🟧  Qualificatorias da Copa Libertadores\n");
     printf("🟩  Fase de grupos da Copa Sul-Americana\n");
