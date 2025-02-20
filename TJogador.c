@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #define N 50
-int validar_data(int dia, int mes, int ano);
 
 // struct de data
 typedef struct Data{
@@ -19,6 +18,7 @@ typedef struct Jogador{
     TData nasc;
 } TJogador;
 
+int validar_data(int dia, int mes, int ano);
 void pedir_dados(TJogador *jogador);
 void imprimir_dados(TJogador jogador);
 

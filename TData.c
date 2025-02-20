@@ -34,8 +34,8 @@ void imprimir_datas(){
 // Preenchendo com data aleatória
 void gerar_data(TData *p){
     do{
-        p -> dia = (rand()%31) + 1;
-        p -> mes = (rand()%12) + 1;
-        p -> ano = (rand()%100) + 1924;
+        p->dia = (rand()%31) + 1;
+        p->mes = (rand()%12) + 1;
+        p->ano = (rand()%100) + 1924;
     } while((p -> mes == 2)&&(p -> dia >28));
 }

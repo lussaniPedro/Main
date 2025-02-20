@@ -46,12 +46,12 @@ void pedir_dados(){
     fflush(stdin);
     system("cls");
 
-    printf("Nivel de atividade fisica (1-Sedentario, 2-Levemente ativo, 3-Moderadamente ativo, 4-Muito ativo, 5-Extremamente ativo): ");
+    printf("Nivel de atividade fisica\n(1-Sedentario, 2-Levemente ativo, 3-Moderadamente ativo, 4-Muito ativo, 5-Extremamente ativo): ");
     scanf("%d", &pessoa.nivel_atividade);
     fflush(stdin);
     system("cls");
 
-    printf("Deseja manter suas informacoes em sigilo? Digite (S) para sim e qualquer outra tecla para nao: ");
+    printf("Deseja manter suas informacoes em sigilo?\nDigite (S) para sim e qualquer outra tecla para nao: ");
     scanf("%c", &op);
     fflush(stdin);
     system("cls");
@@ -79,7 +79,7 @@ void pedir_dados(){
     float calorias_ganhar = calorias_diarias + 500;
 
     printf("| [Para emagrecer, voce deve consumir cerca de %.2f calorias/dia.]\n", calorias_emagrecer);
-    printf("| [Para ganhar massa, voce deve consumir cerca de %.2f calorias/dia.]\n", calorias_ganhar);
+    printf("| [Para ganhar massa, voce deve consumir cerca de %.2f calorias/dia.]\n\n", calorias_ganhar);
 }
 
 float calcularIMC(float peso, float altura){

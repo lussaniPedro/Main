@@ -29,12 +29,12 @@ void imprimir_data(int dia, int mes, int ano){
 
     data = validar_data(dia, mes, ano);
 
-    printf("Data digitada: %d/%d/%d\n", dia, mes, ano);
+    printf("Data digitada: %d/%d/%d\n\n", dia, mes, ano);
     
-    if(data == 0){
+    if(!data){
         printf("Data invalida");
     }
-    else if(data == 1){
+    else{
        printf("Data valida");
     }
 }

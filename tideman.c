@@ -4,37 +4,37 @@
 #include <string.h>
 #include <stdbool.h>
 
-#define MAX_CANDIDATOS 9 // Número máximo de candidatos
+#define MAX_CANDIDATOS 9
 
-/* Declaração de structs */
-typedef struct{
+typedef struct {
     char *nome;
 } TCandidato;
 
-typedef struct{
+typedef struct {
     int winner;
     int loser;
 } TPares;
 
-/* Declaração de funções */
-void cadastrar_candidatos(); // Cadastra os candidatos
-void classificar_candidatos(int votos); // Classifica o rank dos candidatos por votação
-void somar_preferencia(int rank[]); // Soma as preferências dos candidatos por rank
-void criar_pares(); // Cria os pares de vencedores e perdedores
-void ordenar_pares(); // Ordena os pares de vencedores e perdedores
-void valida_alocacao(void *ptr); // Valida a alocação de memória
+void cadastrar_candidatos();
+void classificar_candidatos(int votos);
+void somar_preferencia(int rank[]);
+void criar_pares();
+void ordenar_pares();
+void trancarPares();
+void print_winner();
+bool has_cycle(int start, int end);
+void valida_alocacao(void *ptr);
 
-/* Variáveis globais */
 TCandidato candidatos[MAX_CANDIDATOS];
 int num_candidatos = 0;
 
-TPares pares[MAX_CANDIDATOS] = {0};
+TPares pares[MAX_CANDIDATOS * (MAX_CANDIDATOS - 1) / 2];
 int num_pares = 0;
 
 int preferencias[MAX_CANDIDATOS][MAX_CANDIDATOS] = {0};
+bool locked[MAX_CANDIDATOS][MAX_CANDIDATOS] = {false};
 
-
-int main(){
+int main() {
     int votos = 0;
 
     cadastrar_candidatos();
@@ -43,62 +43,73 @@ int main(){
     scanf("%d", &votos);
     fflush(stdin);
 
-    if(votos < 1){
+    if (votos < 1) {
         printf("\nQuantidade de votos invalida!\n");
         exit(1);
     }
 
     classificar_candidatos(votos);
+    criar_pares();
+    ordenar_pares();
+    trancarPares();
+    print_winner();
 
     return 0;
 }
 
-void ordenar_pares(){
-    for(int i = 0; i < num_candidatos; i++){
-        
-    }
-}
-
-void criar_pares(){
-    for(int i = 0; i < num_candidatos; i++){
-        for(int j = 0; j < num_candidatos; j++){
-            if(preferencias[i][j] > preferencias[j][i]){
-                pares[num_pares].winner = i;
-                pares[num_pares].loser = j;
-                num_pares++;    
+void ordenar_pares() {
+    for (int i = 0; i < num_pares - 1; i++) {
+        for (int j = i + 1; j < num_pares; j++) {
+            int margem_i = preferencias[pares[i].winner][pares[i].loser] - preferencias[pares[i].loser][pares[i].winner];
+            int margem_j = preferencias[pares[j].winner][pares[j].loser] - preferencias[pares[j].loser][pares[j].winner];
+            if (margem_i < margem_j) {
+                TPares temp = pares[i];
+                pares[i] = pares[j];
+                pares[j] = temp;
             }
         }
     }
 }
 
-void somar_preferencia(int rank[]){
-    for(int i = 0; i < num_candidatos - 1; i++){
-        for(int j = 0; j < num_candidatos; j++){
-            preferencias[rank[i]][rank[j]] = j;
+void criar_pares() {
+    for (int i = 0; i < num_candidatos; i++) {
+        for (int j = 0; j < num_candidatos; j++) {
+            if (preferencias[i][j] > preferencias[j][i]) {
+                pares[num_pares].winner = i;
+                pares[num_pares].loser = j;
+                num_pares++;
+            }
         }
     }
 }
 
-void classificar_candidatos(int votos){
+void somar_preferencia(int rank[]) {
+    for (int i = 0; i < num_candidatos; i++) {
+        for (int j = i + 1; j < num_candidatos; j++) {
+            preferencias[rank[i]][rank[j]]++;
+        }
+    }
+}
+
+void classificar_candidatos(int votos) {
     char str[100];
     int rank[MAX_CANDIDATOS];
 
-    for(int i = 0; i < votos; i++){    
-        for(int j = 0; j < num_candidatos; j++){
+    for (int i = 0; i < votos; i++) {
+        for (int j = 0; j < num_candidatos; j++) {
             bool check = false;
             printf("Rank %d: ", j + 1);
             gets(str);
 
-            for(int k = 0; k < num_candidatos; k++){
-                if(strcmp(candidatos[k].nome, str) == 0){
+            for (int k = 0; k < num_candidatos; k++) {
+                if (strcmp(candidatos[k].nome, str) == 0) {
                     check = true;
                     rank[j] = k;
                     break;
                 }
             }
 
-
-            if(!check){
+            if (!check) {
                 printf("\nCandidato invalido!\n");
                 exit(1);
             }
@@ -109,14 +120,14 @@ void classificar_candidatos(int votos){
     }
 }
 
-void cadastrar_candidatos(){
+void cadastrar_candidatos() {
     char str[1000];
 
     printf("Digite os candidatos (separados por espaco): ");
     gets(str);
 
     char *strAux = strtok(str, " ");
-    while(strAux != NULL){
+    while (strAux != NULL) {
         candidatos[num_candidatos].nome = (char *)malloc((strlen(strAux) + 1) * sizeof(char));
         valida_alocacao(candidatos[num_candidatos].nome);
         strcpy(candidatos[num_candidatos].nome, strAux);
@@ -126,19 +137,59 @@ void cadastrar_candidatos(){
         strAux = strtok(NULL, " ");
     }
 
-    if(num_candidatos < 2){
+    if (num_candidatos < 2) {
         printf("\nQuantidade de candidatos invalida!\n");
         exit(1);
     }
 
-    if(num_candidatos > (MAX_CANDIDATOS - 1)){
+    if (num_candidatos > (MAX_CANDIDATOS - 1)) {
         printf("\nO limite de candidatos eh de %d!\n", MAX_CANDIDATOS);
         exit(1);
     }
 }
 
-void valida_alocacao(void *ptr){
-    if(!ptr){
+void trancarPares() {
+    for (int i = 0; i < num_pares; i++) {
+        if (!has_cycle(pares[i].loser, pares[i].winner)) {
+            locked[pares[i].winner][pares[i].loser] = true;
+        }
+    }
+}
+
+bool has_cycle(int start, int end) {
+    if (start == end) {
+        return true;
+    }
+
+    for (int i = 0; i < num_candidatos; i++) {
+        if (locked[start][i]) {
+            if (has_cycle(i, end)) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+void print_winner() {
+    for (int i = 0; i < num_candidatos; i++) {
+        bool is_source = true;
+        for (int j = 0; j < num_candidatos; j++) {
+            if (locked[j][i]) {
+                is_source = false;
+                break;
+            }
+        }
+        if (is_source) {
+            printf("Vencedor: %s\n", candidatos[i].nome);
+            return;
+        }
+    }
+}
+
+void valida_alocacao(void *ptr) {
+    if (!ptr) {
         printf("\nErro ao alocar memoria!\n");
         exit(1);
     }
