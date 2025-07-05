@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <windows.h>
+#include <unistd.h>
+#include <conio.h>
 
 typedef struct{
     int dia;
@@ -33,11 +36,14 @@ typedef struct{
 
 /* Declaração de funções */
 void menu();
-void op_menu(int op);
-void op_turma();
+void switchOp(int op);
+void opTurma();
 
-TTime *_times;
+TTime *_times = NULL;
 int _numTimes = 0;
+
+TTurma *_turmas = NULL;
+int _numTurmas = 0;
 
 int main(){
     int op;
@@ -46,7 +52,7 @@ int main(){
         menu();
         scanf("%d", &op);
 
-        op_menu(op);
+        switchOp(op);
     } while(op != 3);
 
     return 0;
@@ -61,23 +67,13 @@ void menu(){
     printf("Digite a opcao: ");
 }
 
-void menu_turma(){
-    system("cls");
-    printf("1. Incluir turma\n");
-    printf("2. Listar turmas\n");
-    printf("3. Alterar turma\n");
-    printf("4. Excluir turma\n");
-    printf("5. Voltar\n\n");
-    printf("Digite a opcao: ");
-}
-
-void op_menu(int op){
+void switchOp(int op){
     switch(op){
         case 1:
-            op_turma();
+            opTurma();
             break;
         case 2:
-            // op_time();
+            // opTime();
             break;
         case 3:
             printf("Saindo...");
@@ -88,18 +84,28 @@ void op_menu(int op){
     }
 }
 
-void op_turma(){
+void opTurma(){
     int op;
 
     do{
-        menu_turma();
+        menuTurma();
         scanf("%d", &op);
 
-        op_menu_turma(op);
+        switchOpTurma(op);
     } while(op != 5);    
 }
 
-void op_menu_turma(int op){
+void menuTurma(){
+    printf("-- TURMA --\n");
+    printf("1. Incluir turma\n");
+    printf("2. Alterar turma\n");
+    printf("3. Excluir turma\n");
+    printf("4. Listar turmas\n");
+    printf("5. Voltar\n\n");
+    printf("Digite sua opcao: ");
+}
+
+void switchOpTurma(int op){
     switch(op){
         case 1:
             incluirTurma();
@@ -113,5 +119,18 @@ void op_menu_turma(int op){
 }
 
 void incluirTurma(){
-    if(_times);
+    if(_turmas == 0){
+        _turmas = (TTurma*)malloc(1 * sizeof(TTurma));
+    } else{
+        _turmas = (TTurma*)realloc(_turmas, (_numTurmas + 1) * sizeof(TTurma));
+    }
+
+    _turmas[_numTimes++] = criarTurma();
+
+    printf("Turma adicionada com sucesso!");
+    Sleep(800);
+}
+
+TTurma criarTurma(){
+
 }
