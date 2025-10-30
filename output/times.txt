@@ -1,0 +1,41 @@
+20
+Flamengo
+47 14 35 1
+Cruzeiro
+44 13 20 2
+Palmeiras
+43 13 12 2
+Bahia
+36 10 6 2
+Botafogo
+35 10 17 1
+Mirassol
+35 9 15 2
+São Paulo
+32 8 3 5
+Red Bull Bragantino
+30 9 -5 4
+Fluminense
+28 8 -3 1
+Internacional
+27 7 -4 3
+Ceará
+26 7 -1 1
+Corinthians
+26 6 -5 3
+Grêmio
+25 6 -6 3
+Atlético Mineiro
+24 6 -4 4
+Vasco da Gama
+22 6 -1 2
+Santos
+22 6 -11 3
+Vitória
+22 4 -13 4
+Juventude
+21 6 -22 3
+Fortaleza
+15 3 -14 6
+Sport
+10 1 -19 0
